@@ -14,7 +14,7 @@
 
 #Internal globals
 
-   Num;          #array where we store the numbers
+   Num[""]=0;    #array where we store the numbers
    Inf= 2**32;   #the largest number we can process
    Max = -1*Inf; #max count seen in any bucket
                  #initialized to the smallest number

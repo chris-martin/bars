@@ -144,7 +144,7 @@
 
 #Paths:
 
- gawk="/pkgs/gnu/bin/gawk"
+ gawk="/usr/bin/gawk"
  junk="/tmp/bars$$"
 
 #Minor details:
