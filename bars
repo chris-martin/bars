@@ -1,0 +1,206 @@
+
+#=head1 BARS: simple histograms
+
+#=include cs510.pod
+
+ copyleft() {
+  cat<<-EOF
+  bars: print histogram of a column of data
+  Copyright (C) 2004 Tim Menzies
+
+  This program is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public License
+  as published by the Free Software Foundation, version 2.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+  EOF
+  }
+
+#=head2 Motivation
+
+#Before learning, it's good to have a peek at data distributions.
+
+#=head1 Usage
+
+ usage() {
+  cat<<-EOF
+  Usage: bars  [FLAGS]... FILE
+  Print histogram of a column of data
+
+  Flags: 
+   -1 NUM         space reserved for the histogram first column
+                  (shows the bin's keys); default:  $Q$one0$Q
+   -2 NUM         space reserved for the histogram second column
+                  (shows the bin's counter); default: $Q$two0$Q
+   -3 NUM         space reserved for the histogram's third column
+                  (shows the histogram bars); default: $Q$three0$Q
+   -c NUM   column to process; default: $Q$c0$Q
+   -d CHAR  column deliminters; default:$Q$sep0$Q
+   -h     print this help text
+   -l   copyright notice
+   -m CHAR  mark for drawing histogram bars; default:$Q$mark0$Q
+   -r NUM   rounding factor; default:$Q$round0$Q;
+                  increase to decrese number of bins; 
+                  set to zero to disable rounding 
+   -u   don't sort output; default:$Q$unsort0$Q
+   -x   run an example
+  EOF
+ } 
+
+#=head2 Examples
+
+#How big are the files in my home directory right now?
+#I could check using freqx ( http://www.cs.pdx.edu/~timm/dm/freqx.html ):
+
+# bash-2.05$ ls -sa $HOME | gawk 'NR>1{print $1}' | freqx
+#   36 2
+#    5 4
+#    2 22
+#    2 10
+#    2 0
+#    1 6
+#    1 32
+#    1 24
+#    1 140
+#    1 110
+#    1 1
+
+#Can't read that. I want a histogram
+
+# bash-2.05$ ls -sa $HOME | gawk 'NR>1{print $1}' | bars
+#    0| 44| ********************
+#   10|  3| **
+#   20|  3| **
+#   30|  1| *
+#  110|  1| *
+#  140|  1| *
+
+#Hmm, want more details on those smaller files. So
+#I'll decrease the rounding factor.
+
+# bash-2.05$  ls -sa $HOME | gawk 'NR>1{print $1}' | bars -r4
+#    0|   3| ***
+#    4|  41| ****************************************
+#    8|   1| *
+#   12|   2| **
+#   24|   3| ***
+#   32|   1| *
+#  112|   1| *
+#  140|   1| *
+
+#=head2 Installation
+
+
+#Copy the following files to your own directory:
+#http://www.cs.pdx.edu/~timm/dm/barsZ<> and 
+#http://www.cs.pdx.edu/~timm/dm/bars.awkZ<>.
+
+#Make bars executable:
+
+# chmod +x bars
+
+#Edit your paths (see the section B<Settings>. 
+#The first line of percentile should point to your local bash shell and the gawk variable (below) should point to your local version of gawk.
+
+#Check that all it works:
+
+# bars -x 
+
+#If the installation worked, then you should see a histogram
+#on the size of the files in your root directory. For me,
+#that looks like:
+
+#    0| 44| **********************
+#   10|  3| **
+#   20|  3| **
+#   30|  1| *
+#  110|  1| *
+#  140|  1| *
+
+
+
+#=head1 Source code
+
+
+#=head2 Settings
+
+#Defaults:
+
+ c0="NF"
+ sep0=","
+ mark0="*"
+ round0=10
+ unsort0=0
+ one0=4
+ two0=4
+ three0=40
+
+#Paths:
+
+ gawk="/pkgs/gnu/bin/gawk"
+ junk="/tmp/bars$$"
+
+#Minor details:
+
+ Q="\""
+
+#=head2 Demo code
+
+ barsDemo() { 
+  ls -as $1 | $gawk 'NR>1 {print $1}' > ${junk}.data
+  main ${junk}.data 
+  } 
+
+#=head2 Main
+
+ main() {
+    $gawk -F$sep -f bars.awk Collect="$c" Mark="$mark" NoSort="$unsort" \
+                             Col1="$one" Col2="$two" Col3="$three"\
+                             Round="$round" \
+           $1
+ }
+
+#=head2 Bars.awk: The Worker
+
+#=include bars.awk
+
+#=head2 Command line processing
+
+ demo=""
+ while getopts "1:2:3:c:d:hlm:r:ux" flag
+ do case "$flag" in
+  1) one=$OPTARG;;
+  2) two=$OPTARG;;
+  3) three=$OPTARG;;
+        c) c=$OPTARG;;
+        d) sep=$OPTARG;;
+  h) usage;exit;;
+        l) copyleft; exit;;
+        m) mark=$OPTARG;;
+        r) round=$OPTARG;;
+        u) unsort=1;;
+        x) demo="barsDemo $HOME";;
+    esac
+ done
+ shift $(($OPTIND - 1))
+ one=${one:=$one0}
+ two=${two:=$two0}
+ three=${three:=$three0}
+ c=${c:=$c0}  
+ sep=${sep:=$sep0}  
+ c=${c:=$c0}  
+ mark=${mark:=$mark0}  
+ round=${round:=$round0}  
+ unsort=${unsort:=$unsort0}  
+ [ -n "$demo" ] && $demo && exit;
+ main $*
+
+
+#=include footer.timm
